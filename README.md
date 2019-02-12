@@ -16,9 +16,11 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  la base de données.
  
  Donc : 
-        * Un pair ajoute un disque pour la première fois, cela crée au même moment un identifiant unique.
-        * Le pair envoie son identifiant ainsi que les informations relative aux disques dur.
-        * Le serveur reçoit les informations du pair, controle la clé et les disques puis enregistre/met à jours ceux-ci
+ 1. Un pair ajoute un disque pour la première fois, cela crée au même moment un identifiant unique.
+        
+ 2. Le pair envoie son identifiant ainsi que les informations relative aux disques dur.
+        
+ 3. Le serveur reçoit les informations du pair, controle la clé et les disques puis enregistre/met à jours ceux-ci
         pour ensuite attribuer des torrents ou non au pair(en fonction des besoins), afin qu'il devienne une source.
                               
  ### SERVEUR :

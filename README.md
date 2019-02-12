@@ -13,7 +13,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
                                  Le serveur s'occupe de la réception des données provenant des différentes sources afin de                                    les enregistrer dans la base de donnée ou de mettre à jours les données déjà présentes.
                                  Un système de vérification des clé d'identifiction est présent sur le serveur ainsi qu'un                                    système de validation/non-validation d'un nouveau pair.
                                  
- **SERVER :**
+ #SERVER :
  
  Class UpdateInfoDisk
 {
@@ -56,7 +56,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  
  
  
- **SOURCE/PAIR :** 
+ #SOURCE/PAIR :
                                  
   Class Commands
     
@@ -85,30 +85,13 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     {
         **Renvoi l'aide conscernant les commandes**
     }
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
     
    **torrentSave** : se trouve sur la source et permet d'ajouter(--addDisk),supprimer(--remodeDisk à complèter),
                  mettre à joursun disque(--updateDisk) ainsi que d'afficher de l'aide pour les commandes à utiliser(--help).
                  il sert aussi à  créer une clé d'identification unique à ce poste.
                  La clé et les disque ton enregistré au format JSON dans un fichier TXT.
-                  
-                  Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
-                  Pour cela nous avons deux commande :
+                 Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
+                 Pour cela nous avons deux commande :
                   
                         --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification.
                         

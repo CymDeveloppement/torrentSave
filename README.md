@@ -8,13 +8,18 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
 -----------------------------------------------------------------------------------------------------------
   
   ## ARCHITECTURE DU SYSTEME :  
- Chaque pair(source) envoie son identifiant ainsi que les informations sur son/ses 
- disque(s) quotidiennement, ceci est fait automatiquement(en cour).
- Un pair peut également récupérer les informations conscernant l'espace total des disques enregistrés sur le serveur.
- Le serveur s'occupe de la réception des données provenant des différentes sources afin de les enregistrer dans la base de
- donnée ou de mettre à jours les données déjà présentes. Un système de vérification des clé d'identifiction est présent sur
- le serveur ainsi qu'un système de validation/non-validation d'un nouveau pair.
-                                 
+ 
+ Le serveur doit récupérer les informations des différents pairs pour savoir à qui attribuer les torrents en fonction de   
+ l'espace restant sur leurs disque dur. 
+ 
+ Pour cela il faut attribuer à chaque pair un identifiant unique afin de pouvoir reconnaître l'appartenance des disques dans
+ la base de données.
+ 
+ Donc : 1. Un pair ajoute un disque pour la première fois, cela crée au même moment un identifiant unique.
+        2. Le pair envoie son identifiant ainsi que les informations relative aux disques dur.
+        3. Le serveur reçoit les informations du pair, controle la clé et les disques puis enregistre/met à jours ceux-ci
+        pour ensuite attribuer des torrents ou non au pair(en fonction des besoins), afin qu'il devienne une source.
+                              
  ### SERVEUR :
  
  Class UpdateInfoDisk
@@ -22,7 +27,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     public static function verifGet($getValue)
     {
-        **Verifiaction des données de la variable $_GET**
+        **Vérifiaction des données de la variable $_GET**
     }
 
     private function _addDisk($Disk)
@@ -52,7 +57,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     public  function infosDisk()
     {
-        **Renvoi les données stockée **
+        **Renvoi les données stockées **
     }
 
  **infoDisk** :   Se trouve sur le serveur et permet d'ajouter, supprimer, mettre à jours un disque dans la base de donnée grâce aux informations envoyées par les différentes sources avec le paramètre ?update placé dans l'URL ou de renvoyer les informations conscernant l'ensemble des disques avec le paramètre ?infoDisk.

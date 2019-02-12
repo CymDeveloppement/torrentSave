@@ -2,8 +2,8 @@
 
 Deux scripts sont utilisé pour l'authentification des sources ainsi que le stockage des données de ceux-ci :
 
-    -torrentSave.php 
-    -infoDisk.php
+    -torrentSave.php ---> source/pair
+    -infoDisk.php    ---> serveur
     
 -----------------------------------------------------------------------------------------------------------
   

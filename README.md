@@ -17,80 +17,40 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  
  Class UpdateInfoDisk
 {
-  
-    public function __construct($getInfo)
-    {
-       
-    }
-   
-    private function _setDb(PDO $db)
-    {
-       
-    }
-
-    private function _dbConnect($db_dir)
-    {
-       
-    }
     
     public static function verifGet($getValue)
     {
-
-    }
-    
-    public static function keyLenCheck($getValue)
-    {
-     
+        **Verifiaction des données de la variable $_GET**
     }
 
     private function _addDisk($Disk)
     {
-      
+        **Ajout d'un disque à la base de données**
     }
 
     private function _updateDisk($Disk)
     {
-        
+        **Mise à jours d'un disque dans la base de données**
     }
 
     private function _existKey($key)
     {
-      
+        **Vérification de l'existance de la clé dans la base de données**
     }
     
     private function _existDisk($disk)
     {
-     
+        **Vérification de l'existance du disque dans la base de données**
     }
 
     public function Disk()
     {
-     
-    }
-
-    private function _allDiskInfo()
-    {
-      
-    }
-
-    private function _totalSaveUsedSpace()
-    {
-      
-    }
-    
-    private function _totalFreeSpace()
-    {
-       
-    }
-    
-    private function _convert($number)
-    {
-     
+        **Permet d'appeller addDisk ou updatDisk en dehors de la classe si certaines conditions sont présentes**
     }
     
     public  function infosDisk()
     {
-
+        **Renvoi les données stockée **
     }
 
  
@@ -102,56 +62,28 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     public function verifArgs($argc,$argv)
     {
-    
-    }
-    
-    private static function _getUserDir() 
-    {
-      
-    }
-    private function _getIdInfo() 
-    {
-       
-    }
-   
-    private function _keyCheck() 
-    {
-        
+        **Permet de gèrer l'execution des fonctions en dehors de la classe en fonction des paramètres**
     }
     
     private function _addDisk($argv) 
     {
-    
+        **Ajout d'un disque**
     }
 
     private function _updateDisk() 
     {
-     
+        **Mise à jours d'un disque**
     }
  
     private function _removeDisk($argv) 
     {
-
+        **supprime un disque**
     }
-    
-    private function _diskCheck($argv) 
-    {
-    
-    }
-
-    private function _random() 
-    {
-
-    }
-
-    private function _diskKey($argv) 
-    {
-
-    }
+   
 
     private function _help($argv) 
     {
-    
+        **Renvoi l'aide conscernant les commandes**
     }
 
 

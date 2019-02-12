@@ -95,9 +95,9 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
                  Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
                  Pour cela nous avons deux commande :
                   
-                        --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification.
+    --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification.
                         
-                        --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
+    --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
                         
                         
    

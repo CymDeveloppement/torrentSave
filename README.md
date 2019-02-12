@@ -26,7 +26,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  
  Exemple 2:  
  
- 1. Une source envoie un torrent du le serveur.
+ 1. Une source envoie un torrent au serveur.
  
  2. Le serveur envoi le torrent aux X pairs ayant le plus d'espace libre pour avoir de nouvelles sources et donc plus de
  sauvegarde.

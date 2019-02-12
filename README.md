@@ -9,7 +9,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     
    **torrentSave** : se trouve sur la source et permet d'ajouter(--addDisk),supprimer(--remodeDisk à complèter),
-                 mettre à joursun disque(--updateDisk) ainsi que d'afficher de l'aide pour les commandes à utiliser(--help).
+      ===========           mettre à joursun disque(--updateDisk) ainsi que d'afficher de l'aide pour les commandes à utiliser(--help).
                  il sert aussi à  créer une clé d'identification unique à ce poste.
                  La clé et les disque ton enregistré au format JSON dans un fichier TXT.
                   

@@ -7,13 +7,15 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
 -----------------------------------------------------------------------------------------------------------
   
-  **ARCHITECTURE DU SYSTEME :**  Chaque pair(source) envoie son identifiant ainsi que les informations sur son/ses 
-                                 disque(s) quotidiennement, ceci est fait automatiquement(en cour).
-                                 Un pair peut également récupérer les informations conscernant l'espace total des disques                                      enregistrés sur le serveur.
-                                 Le serveur s'occupe de la réception des données provenant des différentes sources afin de                                    les enregistrer dans la base de donnée ou de mettre à jours les données déjà présentes.
-                                 Un système de vérification des clé d'identifiction est présent sur le serveur ainsi qu'un                                    système de validation/non-validation d'un nouveau pair.
+  ## ARCHITECTURE DU SYSTEME :  
+ Chaque pair(source) envoie son identifiant ainsi que les informations sur son/ses 
+ disque(s) quotidiennement, ceci est fait automatiquement(en cour).
+ Un pair peut également récupérer les informations conscernant l'espace total des disques enregistrés sur le serveur.
+ Le serveur s'occupe de la réception des données provenant des différentes sources afin de les enregistrer dans la base de
+ donnée ou de mettre à jours les données déjà présentes. Un système de vérification des clé d'identifiction est présent sur
+ le serveur ainsi qu'un système de validation/non-validation d'un nouveau pair.
                                  
- #SERVER :
+ ### SERVEUR :
  
  Class UpdateInfoDisk
 {
@@ -56,7 +58,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  
  
  
- #SOURCE/PAIR :
+ ### SOURCE/PAIR :
                                  
   Class Commands
     

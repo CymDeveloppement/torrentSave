@@ -22,6 +22,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         
  3. Le serveur reçoit les informations du pair, controle la clé et les disques puis enregistre/met à jours ceux-ci
         pour ensuite attribuer des torrents ou non au pair(en fonction des besoins), afin qu'il devienne une source.
+ 
                               
  ### SERVEUR :
  

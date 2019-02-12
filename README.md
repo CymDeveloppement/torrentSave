@@ -55,7 +55,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         **Renvoi les données stockée **
     }
 
- 
+ **infoDisk** :   Se trouve sur le serveur et permet d'ajouter, supprimer, mettre à jours un disque dans la base de donnée grâce aux informations envoyées par les différentes sources avec le paramètre ?update placé dans l'URL ou de renvoyer les informations conscernant l'ensemble des disques avec le paramètre ?infoDisk.
  
  
  ### SOURCE/PAIR :
@@ -90,7 +90,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
    **torrentSave** : se trouve sur la source et permet d'ajouter(--addDisk),supprimer(--remodeDisk à complèter),
                  mettre à joursun disque(--updateDisk) ainsi que d'afficher de l'aide pour les commandes à utiliser(--help).
-                 il sert aussi à  créer une clé d'identification unique à ce poste.
+                 Permet aussi de créer une clé d'identification unique au a la source.
                  La clé et les disque ton enregistré au format JSON dans un fichier TXT.
                  Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
                  Pour cela nous avons deux commande :
@@ -100,7 +100,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
                         --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
                         
                         
-    infoDisk :   Se trouve sur le serveur et 
+   
                   
                   
                   

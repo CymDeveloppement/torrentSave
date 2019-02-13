@@ -68,6 +68,16 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     {
         **Vérification de l'existance du disque dans la base de données**
     }
+    
+    private function _linkServer($address)
+    {
+        **Permet de lier l'adresse du serveur**
+    }
+    
+    private function _unLinkServer()
+    {
+        **Supprime l'adresse du serveur ainsi que la clé et le tableau d'information des disques**
+    }
 
     public function Disk()
     {

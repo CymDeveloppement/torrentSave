@@ -15,7 +15,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  Pour cela il faut attribuer à chaque pair un identifiant unique afin de pouvoir reconnaître l'appartenance des disques dans
  la base de données.
  
- Exemple 1: 
+ **Cas 1: **
  
  1. Un pair ajoute un disque pour la première fois, cela crée au même moment un identifiant unique.
         
@@ -24,12 +24,19 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  3. Le serveur reçoit les informations du pair, controle la clé et les disques puis enregistre/met à jours ceux-ci
         pour ensuite attribuer des torrents ou non au pair(en fonction des besoins), afin qu'il devienne une source.
  
- Exemple 2:  
+ **Cas 2: ** 
  
  1. Une source envoie un torrent au serveur.
  
  2. Le serveur envoi le torrent aux X pairs ayant le plus d'espace libre pour avoir de nouvelles sources et donc plus de
  sauvegarde.
+ 
+ **Cas 3: **
+ 
+ 1. Quelqu'un veut supprimer un torrent.
+ 2. Le serveur fait la liste des sources le possèdant.
+ 3. Quand les pairs auront envoyer leurs informations au serveur, il leurs renverra un tableau JSON contenant
+ les torrents à supprimer.
  
                               
  ### SERVEUR :

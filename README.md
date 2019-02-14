@@ -69,16 +69,6 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         **Vérification de l'existance du disque dans la base de données**
     }
     
-    private function _linkServer($address)
-    {
-        **Permet de lier l'adresse du serveur**
-    }
-    
-    private function _unLinkServer()
-    {
-        **Supprime l'adresse du serveur ainsi que la clé et le tableau d'information des disques**
-    }
-
     public function Disk()
     {
         **Permet d'appeller addDisk ou updatDisk en dehors de la classe si certaines conditions sont présentes**
@@ -116,6 +106,15 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         **supprime un disque**
     }
    
+    private function _linkServer($address)
+    {
+        **Permet de lier l'adresse du serveur**
+    }
+    
+    private function _unLinkServer()
+    {
+        **Supprime l'adresse du serveur ainsi que la clé et le tableau d'information des disques**
+    }
 
     private function _help($argv) 
     {
@@ -132,6 +131,26 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification.
                         
     --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
+    
+   #### Installation 
+   
+   
+   **Méthode 1 : Installation automatique **
+   
+        curl -sSL http://install.10.0.10.X | bash
+        
+   **Méthode 2 : Git clone **
+   
+            git clone --depth 1 https://github.com/CymDeveloppement/torrentSave torrentSave
+            cd "torrentSave/install/"
+            sudo bash install.sh
+            
+   **Méthode 3 : Téléchargement manuel de l'installer + éxécution
+   
+            wget -O install.sh https://install.10.0.10.X
+            sudo bash install.sh
+            
+        
                         
                         
    

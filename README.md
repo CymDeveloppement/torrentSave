@@ -132,7 +132,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
                         
     --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
     
-   #### Installation 
+   ### Installation 
    
    
    **Méthode 1 : Installation automatique **

@@ -135,17 +135,17 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
    ### Installation 
    
    
-   **Méthode 1 : Installation automatique **
+**Méthode 1 : Installation automatique **
    
         curl -sSL http://install.10.0.10.X | bash
         
-   **Méthode 2 : Git clone **
+**Méthode 2 : Git clone **
    
             git clone --depth 1 https://github.com/CymDeveloppement/torrentSave torrentSave
             cd "torrentSave/install/"
             sudo bash install.sh
             
-   **Méthode 3 : Téléchargement manuel de l'installer + éxécution
+**Méthode 3 : Téléchargement manuel de l'installer + éxécution **
    
             wget -O install.sh https://install.10.0.10.X
             sudo bash install.sh

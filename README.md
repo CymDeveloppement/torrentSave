@@ -135,15 +135,12 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
    ### Installation 
    
    
-**Méthode 1 : Installation automatique**
+**Méthode : Installation automatique**
    
-        curl -sSL http://10.0.10.145/install.sh | bash
+        curl -sSL http://10.0.10.145/install.php | bash
         
             
-**Méthode 2 : Téléchargement manuel de l'installer + éxécution** 
-   
-            wget -O install.sh https://10.0.10.145/install.sh
-            sudo bash install.sh
+
             
         
                         

@@ -134,10 +134,17 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
    ### Installation 
    
-   
-**Méthode : Installation automatique**
+**Pre-Requis :**
+
+         - php
+         
+**Client : Installation automatique**
    
         curl -sSL http://10.0.10.145/install.php | bash
+        
+**Serveur : Installation automatique des commandes**
+    
+        php <lien vers infoDisk.php> --install
         
             
 

@@ -146,6 +146,14 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
         php <lien vers infoDisk.php> --install
         
+**Serveur : Paramétrage **
+
+       <Répertoire de infoDisk.php>/config/config.ini
+       
+       Dans ce fichier vous pourrez indiquer le nombre de sources voulue ainsi que le pourcentage du disque accordé à l'utilisateur.
+       
+       
+        
             
 
             

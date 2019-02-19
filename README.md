@@ -150,7 +150,8 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
 
        <Répertoire de infoDisk.php>/config/config.ini
        
-       Dans ce fichier vous pourrez indiquer le nombre de sources voulue ainsi que le pourcentage du disque accordé à l'utilisateur.
+       Dans ce fichier vous pourrez indiquer le nombre de sources 
+       voulue ainsi que le pourcentage du disque accordé à l'utilisateur.
        
        
         

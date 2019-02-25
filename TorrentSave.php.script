@@ -1,0 +1,616 @@
+#!/usr/bin/php
+<?php
+/**
+ * PHP Version 7
+ * Verif Class Doc Comment
+ *
+ * @category Class
+ * @package  Package
+ * @author   SCHRODER Bastien <bastien.schroder@gmail.com>
+ * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
+ * @link     http://10.0.10.145/infoDisk.php
+ */
+
+/**
+ * Command Class Doc Comment
+ *
+ * @category Class
+ * @package  Package
+ * @author   SCHRODER Bastien <bastien.schroder@gmail.com>
+ * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
+ * @link     http://10.0.10.145/infoDisk.php
+ */
+Class Commands
+{
+    private static $_keyLength = 50 ;
+    //private static $_linkInfoDisk = "http://10.0.10.145/infoDisk.php";
+    /**
+     * Verify Args
+     *
+     * @param Array $argc number of array line
+     * @param Array $argv array of data
+     *
+     * @return boolean
+     **/
+    public function verifArgs($argc,$argv)
+    {
+        $config=self::_getIdInfo();
+
+        if (file_exists(self::_getUserDir()) && isset($config['server'])) {
+
+            switch(true)
+                {
+                case $argc > 2 && in_array($argv[1], array('--addDisk', '-add')):
+                       
+                        self::_addDisk($argv[2]);
+                    break;
+                case $argc > 2 && in_array($argv[1], array('--removeDisk', '-rm')):
+                        
+                        self::_removeDisk($argv[2]);
+                    break; 
+                case $argc > 2 && in_array($argv[1], array('--link', '-l')):
+                        self::_linkServer($argv[2]);
+                    break; 
+                case $argc > 2 && in_array($argv[1], array('--save', '-save')):
+                        self::_save($argv[2]);
+                    break;
+                case $argc = 2 && in_array($argv[1], array('--unLink', '-ul')):
+                        self::_unLinkServer();
+                    break;
+                case $argc = 2 && in_array($argv[1], array('--send', '-send')):
+                        echo self::_updateDisk();
+                    break; 
+                 case $argc = 2 && in_array($argv[1], array('--infoDisk', '-i')):
+                        echo file_get_contents($config['server']."?info");
+                    break;  
+                case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
+                        echo self::_help($argv);
+                    break;
+                
+                }    
+
+        } else {
+
+            
+            switch(true)
+                {
+                case $argc > 2 && in_array($argv[1], array('--link', '-l')):
+                        self::_linkServer($argv[2]);
+                    break; 
+                case $argc <= 2 && in_array($argv[1], array('--help', '-h', '-?')):
+                        echo self::_help($argv);
+                    break;
+                default :
+                    echo "\nVous devez lier un serveur avant de commencer tout autre action, utilisez l'option --link http://www.exemple.com/exemple \n\n";
+                
+                }    
+
+        }
+        
+    }
+
+    /**
+     * Get the name of current user   
+     *
+     * @return string
+     **/
+    private static function _getUserDir() 
+    {
+        $currUser = get_current_user();
+
+        return "/home/$currUser/.config/torrentSave/Id.txt";
+    }
+
+    /**
+     * Get Id info 
+     *
+     * @return array
+     **/
+    private function _getIdInfo() 
+    {
+        if (file_exists(self::_getUserDir())) {
+
+            $data = file_get_contents(self::_getUserDir());
+
+            $dataArray = json_decode($data, true);
+            
+            return $dataArray;
+
+        } 
+
+        return null;
+    }
+    /**
+     * Check if key exist 
+     *
+     * @return boolean
+     **/
+    private function _keyCheck() 
+    {
+        $config=self::_getIdInfo();
+        if (isset($config['key'])) {
+            echo "\nclé existante\n";
+            return true;
+
+
+        } else {
+
+            $config['key'] = self::_random();
+            if (file_put_contents(self::_getUserDir(), json_encode($config))) {
+                echo "\nouvelle clé\n";
+                return true;
+            }
+
+        }
+        return fasle;
+    }
+    /**
+     * Add Disk 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+ 
+      private function _addDisk($argv) 
+    {
+        
+        if (self::_keyCheck()) {
+            
+            $config=self::_getIdInfo();
+            $fsName= explode("\n", shell_exec("df --output=source $argv"));
+            $i = self::_diskCheck($argv);
+            if ($i != false || $i === 0) {
+
+                echo "\nDisk already exist\n";
+
+            } else {
+
+                    $config['disk'][]= array(
+                                        "diskKey" => self::_diskKey($argv),
+                                        "total" => disk_total_space("$argv"),
+                                        "dir"   =>  $argv,
+                                        "fsName" => $fsName[1],
+                                    );
+                    file_put_contents(self::_getUserDir(), json_encode($config));
+                    echo "\nAdded disk\n";
+
+            }
+        } else {
+
+            echo "erreur";
+        }
+
+    }
+
+    /**
+     * Update Disk 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+ 
+      private function _updateDisk() 
+    {
+        
+        $idInfo = self::_getIdInfo();
+        $count = count($idInfo['disk']);
+
+        for ($i = 0; $i < $count; $i++) {
+                $ss=$idInfo['disk'][$i]['dir'];
+                echo $ss;
+                if(!file_exists($ss."/save")) {
+                    shell_exec("sudo mkdir ".$ss."/save");
+                }
+                $saveSpace = explode("\t", shell_exec("du -sb ".$ss."/save"));
+                $usedSpace = explode("\t", shell_exec("du -sb $ss"));
+                $hostname =gethostname();
+                $diskFreeSpace = disk_free_space($idInfo['disk'][$i]['dir']);
+                echo file_get_contents(
+                 $idInfo['server']."?update&key=".$idInfo['key'].
+                "&dir=".$idInfo['disk'][$i]['dir'].
+                "&total=".$idInfo['disk'][$i]['total'].
+                "&diskKey=".$idInfo['disk'][$i]['diskKey'].
+                "&saveSpace=".$saveSpace[0].
+                "&usedSpace=".$usedSpace[0].
+                "&hostname=".$hostname.
+                "&freeSpace=".$diskFreeSpace."", "r"
+
+            );    
+            echo "\nEnvoi $i fait \n";       
+        }  
+    }
+
+    /**
+     * Remove Disk 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+ 
+      private function _removeDisk($argv) 
+    {
+
+            $config=self::_getIdInfo();
+            $i = self::_diskCheck($argv);
+            var_dump($i);
+            if ($i != false || $i === 0) {
+                unset($config['disk'][$i]);
+                file_put_contents(self::_getUserDir(), json_encode($config));
+                echo "Removed disk";
+
+            } else {
+
+                    echo "Disk doesn't exist";
+                    
+            }
+    }
+
+
+    /**
+     * Check if disk exist 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean 
+     **/
+    private function _diskCheck($argv) 
+    {
+        $idInfo = self::_getIdInfo();
+        if (isset($idInfo['disk'])) {
+            $idInfo2 = $idInfo['disk'];
+            $count = count($idInfo2);
+        } else {
+            return false;
+        }
+        $x=false;
+        for ($i = 0; $i < $count; $i++) {
+
+            if ($idInfo['disk'][$i]['diskKey'] == self::_diskKey($argv)) {
+
+                $x=$i;
+
+            }
+        }
+        return $x;
+
+    }
+
+ 
+
+    /**
+     * Generate a randomKey
+     *
+     * @return string
+     **/
+    private function _random() 
+    {
+
+        $characters='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $random = '';
+        for ($i = 0; $i < self::$_keyLength; $i++) {
+            $random .= $characters[rand(0, $charactersLength - 1)];
+        }
+        $randomKey = hash('sha256', $random);
+        return $randomKey;
+    }
+
+    /**
+     * Generate a new key
+     *
+     * @param Array $argv array of data
+     *
+     * @return string
+     **/
+    private function _diskKey($argv) 
+    {
+
+        $fsName= explode("\n", shell_exec("df --output=source $argv"));
+        $blk= explode("\n", shell_exec("sudo blkid -o export $fsName[1]"));
+        
+        foreach ($blk as $blkLine) {
+
+            
+            $split = explode("=", $blkLine);
+
+            if ($split[0] === "UUID") {
+               
+                $uuid = $split[1];
+
+            }
+        }
+
+
+
+
+
+
+        $diskKey = hash('sha256', $uuid);
+        return $diskKey;
+    }
+
+    /**
+     * Link the server address 
+     *
+     * @return boolean
+     **/
+    private function _linkServer($address) 
+    {
+        
+        if (!file_exists(self::_getUserDir())) {
+             $link = array("server" => "$address");
+            if (file_put_contents(self::_getUserDir(), json_encode($link))) {
+                echo "\nServeur lié\n\n";
+
+                return true;
+            }
+        } elseif (file_exists(self::_getUserDir()) && !isset($config['server'])) {
+                $config=self::_getIdInfo();
+                self::_unLinkServer();
+                $link = array("server" => "$address");
+                if (file_put_contents(self::_getUserDir(), json_encode($link))) {
+                echo "\nServeur lié.\n\n";
+
+                return true; 
+
+                } else {
+
+                        echo "\nUn serveur est déjà lié \n\n";
+                        return true;
+                    }
+                    return fasle;
+                }
+    }
+
+    /**
+     * unLink the server address 
+     *
+     * @return boolean
+     **/
+    private function _unLinkServer() 
+    {
+       
+        if (file_exists(self::_getUserDir())) {
+
+            echo "\nSi vous continuez, le serveur ne sera plus lié et les information sur les disque dur \nainsi que la clé d'identification seront detruite. Pour continuer tapez 'yes' : ";
+            $handle = fopen ("php://stdin","r");
+            $line = fgets($handle);
+            if(strtolower(trim($line)) != 'yes'){
+                echo "\nAction annulé !\n\n";
+                exit;
+            }
+            fclose($handle);
+            echo "\n"; 
+            echo "Le serveur n'est plus lié, les informations des disques \ndur et la clé d'identification ont été supprimer aussi\n \n";
+
+
+
+            if (unlink(self::_getUserDir())) {
+            
+                  return true;
+            } else {
+
+                echo "\nune erreur est survenue \n\n";
+                return false;
+
+            }
+
+        } else {
+                echo "\nAucun lien serveur à supprimer \n\n";
+                return true;
+
+        }
+        return fasle;
+    }
+
+    /**
+     * Convert octets
+     *
+     * @param Array $number int
+     *
+     * @return string
+     **/
+    private function _convert($number)
+    {
+        if (is_numeric($number)) {
+
+            switch(true) {
+
+            case $number > 1000000000000:
+                $number = intval($number/1000000000000);
+                return "$number To";
+                break; 
+            case $number > 1000000000 && $number < 1000000000000:
+                $number = intval($number/1000000000);
+                return "$number Go";
+                break; 
+
+            case $number < 1000000000 && $number > 1000000:
+                $number = intval($number/1000000);
+                return "$number Mo";
+                break; 
+            case $number < 1000000:
+                return "$number Octets";
+                break;
+            }
+        } else {
+            return null;
+        }
+    }
+
+     /**
+     * Save Torrent
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+ 
+    private function _save($file) 
+    {
+        $idInfo = self::_getIdInfo();
+        if (!file_exists($file)) {
+            echo "erreur";
+            return;
+        } 
+      
+        $filesize = intval(filesize($file)/1000000000);
+        $check = file_get_contents(
+                                    $idInfo['server']."?check&key=".$idInfo['key'].
+                                    "&size=".$filesize."", "r"
+                                    );    
+         
+        if (!$check) {
+            echo " Il n'y a pas asser de place\n";
+            return;
+        } 
+        
+        $trackerTemp = parse_url($idInfo['server']);
+        $tracker = $trackerTemp["host"];
+        $baseName = basename($file);
+
+        if (!isset($baseName) || !isset($tracker) && !isset($file)) {
+            echo "Impossible de créer le torrent car il manque des informations.";
+        }
+        shell_exec("transmission-create -o ~/".$baseName.".torrent -t http://".$tracker."/announce -p  $file");
+        $currUser = get_current_user();
+        $torrentFile = "/home/$currUser/".$baseName.".torrent";
+
+        if (!file_exists($torrentFile)) {
+            echo "erreur $torrentFile";
+        }
+
+        $key = $idInfo['key'];
+        $ch=curl_init();
+        $mime = mime_content_type($baseName);
+        $cfile = curl_file_create('/home/'.$currUser.'/'.$baseName.'.torrent',$mime,$baseName);
+        $data = array(
+                      'key' => $key, 
+                      'fileToUpload' => $cfile
+                    
+                  );
+        curl_setopt($ch, CURLOPT_URL, $idInfo['server']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
+        curl_setopt($ch, CURLOPT_POST,1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+        echo $result;
+     
+
+        $count = count($idInfo['disk']);
+        $freeSp = 0;
+        for ($i = 0; $i < $count; $i++) {
+            $dFS = disk_free_space($idInfo['disk'][$i]['dir']);
+            if ($freeSp < $dFS ){
+                $freeSp=$dFS;
+                $diskSave = $idInfo['disk'][$i]['dir'];
+            }
+        }
+
+        if (!file_exists($diskSave."/save")) {
+            shell_exec("sudo mkdir ".$diskSave."/save");
+        }
+
+        if (rename($file, $diskSave."/save/".$baseName)) {
+            echo "succès";    
+        }
+
+
+    }
+
+    /**
+     * Command help
+     *  
+     * @param Array $argv array of data
+     *
+     * @return string
+     **/
+    private function _help($argv) 
+    {
+        $help =
+            "
+            NAME
+                
+                --addDisk, -add    ----> used to add a disk.
+                --removeDisk, -rm  ----> used to remove disk.
+                --send, -s         ----> used to send key and disk data to server
+                --infoDisk, -i     ----> used to get disk info from server
+                --link, -l         ----> used to link server address
+                --unLink, -ul      ----> used to unlink server address
+                --help, -h, -?     ----> used to show this help.
+
+            SYNOPSIS
+                
+                $argv[0]             <option>                      <dir>
+                                        ^                            ^
+                                        |                            |
+                               (add, remove or help)           (Disk directory)
+
+            DESCRIPTION
+
+                1 - You need to link the server address ( --link ).
+                2 - Add one Disk or more.
+                3 - 
+
+            EXAMPLES
+                
+                $argv[0] --addDisk /disk1
+
+                $argv[0] --removeDisk /disk1
+
+                $argv[0] --send 
+
+                $argv[0] --infoDisk 
+
+                $argv[0] --link http://wwww.exemple.com/exemple
+
+                $argv[0] --unLink
+
+                $argv[0] -help\n";
+        return $help;
+    }
+
+}
+
+/**
+ * Disk Class Doc Comment
+ *
+ * @category Class
+ * @package  Package
+ * @author   SCHRODER Bastien <bastien.schroder@gmail.com>
+ * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
+ * @link     http://10.0.10.145/infoDisk.php
+ */
+Class Disk
+{
+    /**
+     * Add Disk 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+    private function _addDisk($arg) 
+    {
+
+
+    }
+
+    /**
+     * Get Disk 
+     *
+     * @param Array $arg array of data
+     *
+     * @return boolean
+     **/
+    private function _getDisk($arg) 
+    {
+
+
+    }
+}
+Commands::verifArgs($argc,$argv);

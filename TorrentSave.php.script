@@ -198,27 +198,48 @@ Class Commands
         $count = count($idInfo['disk']);
 
         for ($i = 0; $i < $count; $i++) {
-                $ss=$idInfo['disk'][$i]['dir'];
-                echo $ss;
-                if(!file_exists($ss."/save")) {
-                    shell_exec("sudo mkdir ".$ss."/save");
-                }
-                $saveSpace = explode("\t", shell_exec("du -sb ".$ss."/save"));
-                $usedSpace = explode("\t", shell_exec("du -sb $ss"));
-                $hostname =gethostname();
-                $diskFreeSpace = disk_free_space($idInfo['disk'][$i]['dir']);
-                echo file_get_contents(
-                 $idInfo['server']."?update&key=".$idInfo['key'].
-                "&dir=".$idInfo['disk'][$i]['dir'].
-                "&total=".$idInfo['disk'][$i]['total'].
-                "&diskKey=".$idInfo['disk'][$i]['diskKey'].
-                "&saveSpace=".$saveSpace[0].
-                "&usedSpace=".$usedSpace[0].
-                "&hostname=".$hostname.
-                "&freeSpace=".$diskFreeSpace."", "r"
+            $ss=$idInfo['disk'][$i]['dir'];
+            echo $ss;
+            if(!file_exists($ss."/save")) {
+                shell_exec("sudo mkdir ".$ss."/save");
+            }
+            $saveSpace = explode("\t", shell_exec("du -sb ".$ss."/save"));
+            $usedSpace = explode("\t", shell_exec("du -sb $ss"));
+            $hostname =gethostname();
+            $diskFreeSpace = disk_free_space($idInfo['disk'][$i]['dir']);
+            $res = file_get_contents(
+             $idInfo['server']."?update&key=".$idInfo['key'].
+            "&dir=".$idInfo['disk'][$i]['dir'].
+            "&total=".$idInfo['disk'][$i]['total'].
+            "&diskKey=".$idInfo['disk'][$i]['diskKey'].
+            "&saveSpace=".$saveSpace[0].
+            "&usedSpace=".$usedSpace[0].
+            "&hostname=".$hostname.
+            "&freeSpace=".$diskFreeSpace."", "r"
 
-            );    
-            echo "\nEnvoi $i fait \n";       
+            );  
+           
+            //var_dump($res);
+            if (isset($res)) {
+                
+                $res2 = file_get_contents(
+                $idInfo['server']."?getTorrent&key=".$idInfo['key'].
+                "&libelle=".$res."", "r"
+                ); 
+                
+                if ($res2 != false) {
+                    echo "pas faux";
+                } 
+
+                $res2 = json_decode($res2, true);
+                echo $uploadfile = $idInfo['disk'][$i]['dir'] . "/save/" . basename($res2['fileToUpload']['name']);
+                if(move_uploaded_file($res2['fileToUpload']['postname'], $uploadfile.'.torrent')) {
+                    echo "\n\n\n fonctionne bien\n\n\n\n";
+                }
+        
+            } else {
+                echo "\nEnvoi $i fait \n";  
+            }       
         }  
     }
 
@@ -322,11 +343,6 @@ Class Commands
 
             }
         }
-
-
-
-
-
 
         $diskKey = hash('sha256', $uuid);
         return $diskKey;
@@ -453,7 +469,7 @@ Class Commands
     {
         $idInfo = self::_getIdInfo();
         if (!file_exists($file)) {
-            echo "erreur";
+            echo "Le fichier ou répertoire n'existe pas\n";
             return;
         } 
       
@@ -464,7 +480,7 @@ Class Commands
                                     );    
          
         if (!$check) {
-            echo " Il n'y a pas asser de place\n";
+            echo " Il n'y a pas assez de place\n";
             return;
         } 
         
@@ -474,13 +490,15 @@ Class Commands
 
         if (!isset($baseName) || !isset($tracker) && !isset($file)) {
             echo "Impossible de créer le torrent car il manque des informations.";
+            return;
         }
         shell_exec("transmission-create -o ~/".$baseName.".torrent -t http://".$tracker."/announce -p  $file");
         $currUser = get_current_user();
         $torrentFile = "/home/$currUser/".$baseName.".torrent";
 
         if (!file_exists($torrentFile)) {
-            echo "erreur $torrentFile";
+            echo "Erreur lors de la création du torrent\n";
+            return;
         }
 
         $key = $idInfo['key'];
@@ -488,7 +506,8 @@ Class Commands
         $mime = mime_content_type($baseName);
         $cfile = curl_file_create('/home/'.$currUser.'/'.$baseName.'.torrent',$mime,$baseName);
         $data = array(
-                      'key' => $key, 
+                      'key' => $key,
+                      'size' => filesize($file), 
                       'fileToUpload' => $cfile
                     
                   );
@@ -498,9 +517,12 @@ Class Commands
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $result = curl_exec($ch);
-        echo $result;
-     
 
+        if ($result === "false") {
+            echo "Le fichier existe déjà\n";
+            return;
+        }
+        echo $result;
         $count = count($idInfo['disk']);
         $freeSp = 0;
         for ($i = 0; $i < $count; $i++) {
@@ -516,10 +538,8 @@ Class Commands
         }
 
         if (rename($file, $diskSave."/save/".$baseName)) {
-            echo "succès";    
+            echo "Ajout du fichier réussi\n";    
         }
-
-
     }
 
     /**

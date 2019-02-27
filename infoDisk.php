@@ -329,6 +329,148 @@ Class UpdateInfoDisk
             return true;
         }
     }
+    /**
+     * Get the first waitting torrent
+     *
+     * @return integer
+     **/
+    private function _firstWaittingTorrent()
+    {
+        $reqFirstWaittingTorrent = $this->_db->prepare(
+            'SELECT * 
+             FROM torrent 
+             WHERE statut = 0
+             LIMIT 1'
+        );
+        $reqFirstWaittingTorrent->execute();
+
+        $data = $reqFirstWaittingTorrent->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data===false) {
+            return false;
+        } 
+        return $data;
+    
+    }
+
+    /**
+     * Check if the pair exist in shareList table
+     *
+     * @param String $disk disk
+     *
+     * @return integer
+     **/
+    private function _checkSend($disk)
+    {
+
+        /** Vérification de l'appartenance au Top 3 **/
+        $top = self::_topFreeSpace();
+        
+        if ($top===false) {
+            echo "erreur top\n\n\n";
+            var_dump($top);
+            return false;
+        } 
+        $isTop = false;
+        foreach ($top as $key => $ligne) {
+
+            if ($ligne['pcKey'] = $disk['key'] ) {
+                
+                $isTop = true;
+            }
+        }
+        if ($isTop === false) {
+            return false;
+        }
+        /** Récupération d'un torrent en attente puis vérification de la share List **/
+        $firstWaittingTorrent = self::_firstWaittingTorrent();
+
+        if ($firstWaittingTorrent===false) {
+            return false;
+        }
+
+
+        $reqShareList = $this->_db->prepare(
+            'SELECT * FROM shareList 
+             INNER JOIN torrent 
+             ON shareList.idTorrent = torrent.idTorrent 
+             WHERE  idPair = :idPair 
+             AND statut = 0 
+             AND shareList.idTorrent = :idTorrent
+             AND :idPair != idSource'
+        );
+
+        $reqShareList->execute(
+            array(
+                'idPair' => $disk['key'],
+                'idTorrent' => $firstWaittingTorrent['idTorrent']
+            )
+        );
+
+        $data = $reqShareList->fetchAll();
+         
+        if (count($data)>0) {
+            return false;
+        } 
+       
+        return true;
+    }
+
+    /**
+     * Add data in db --> infoDisk
+     *
+     * @param Array $Disk array of data
+     *
+     * @return boolean
+     **/
+   /* private function _linkTorrentTo($Disk)
+    {
+        $req = $this->_db->prepare(
+            'INSERT INTO shareList(
+                idTorrent,
+                idPair
+                ) 
+                VALUES(
+                :idTorrent,
+                :idPair
+                )'
+        );
+
+        $req->execute(
+            array(
+            'idTorrent' => $Disk['key']-----------------------------------------,
+            'idPair' => $Disk['hostname']-----------------------------------------)
+        );
+        return true;
+    }*/
+
+    /**
+     * Send torrent to the pair
+     *
+     * @param Array $Disk array of data
+     *
+     * @return boolean
+     **/
+    public function sendTorrent($torrent)
+    {
+
+
+        
+        $ch=curl_init();
+        $baseName = basename($torrent['libelle']);
+        $mime = mime_content_type($torrent['libelle']);
+        
+        $cfile = curl_file_create($torrent['libelle'],$mime,$baseName);
+        $data = array(
+                      'fileToUpload' => $cfile
+                  );
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
+        curl_setopt($ch, CURLOPT_POST,1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        $result = curl_exec($ch);
+       
+        return $data;
+    }
 
     /**
      * Add or update disk
@@ -338,18 +480,33 @@ Class UpdateInfoDisk
     public function disk()
     {
         $disk= $this->_getInfo;
-
+       
         if (self::_existKey($disk)) {
+
             if (!self::_existDisk($disk)) {
-
+                
                 self::_addDisk($disk);
-
+              
+                if (self::_checkSend($disk)) {
+                    $firstWaittingTorrent = self::_firstWaittingTorrent();
+                     
+                    return $firstWaittingTorrent;
+                }
 
                 
                 return "disque ajouté";
 
             } else {
                 self::_updateDisk($disk);
+                if (self::_checkSend($disk)) {
+                    $firstWaittingTorrent = self::_firstWaittingTorrent();
+
+                    return $firstWaittingTorrent['libelle'];
+                }
+
+
+
+
                 return "disque mis à jour";
             }
         }
@@ -512,7 +669,7 @@ Class UpdateInfoDisk
         $limit = self::$_iniConfig['SourceNumber'];
        
         $req = $this->_db->prepare(
-            'SELECT pcName, SUM(totalSpace) AS totalSpace, 
+            'SELECT pcKey, pcName, SUM(totalSpace) AS totalSpace, 
                             SUM(saveSpace) AS saveSpace,
                             SUM(usedSpace) AS usedSpace, 
                             SUM(freeSpace ) AS freeSpace 
@@ -571,31 +728,89 @@ Class UpdateInfoDisk
     }
 
     /**
-     * Check if we have enougth space to save new torrent
+     * Check if the torrent exist in the database
      *
-     * @param Array $argv array of data
+     * @param String $libelle libelle
+     *
+     * @return integer
+     **/
+    private function _existTorrent($libelle)
+    {
+        $req = $this->_db->prepare(
+            'SELECT libelle FROM torrent WHERE libelle = :libelle '
+        );
+        $req->execute(
+            array(
+                'libelle' => $libelle
+            )
+        );
+        $data = $req->fetch(PDO::FETCH_ASSOC);
+        
+        if ($data===false) {
+            return false;
+        } else {
+
+            return true;
+        }
+    }
+
+    /**
+     * Add torrent in torrentSave folder / db
+     *
+     * @param Array  $FILES array of data
+     * @param String $POST  source id
      *
      * @return boolean
      **/
-    public function addTorrent($FILES)
+    public function addTorrent($FILES, $POST)
     {
         $target_dir = "/torrentSave/";
         $target_file = $target_dir . basename($FILES["fileToUpload"]["name"]);
         $uploadOk = 1; 
-        $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+        $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
         $tmp_name = $FILES["fileToUpload"]["tmp_name"];
         $uploaddir = '/srv/http/torrentSave/';
         $uploadfile = $uploaddir . basename($FILES['fileToUpload']['name']);
-
-        if (move_uploaded_file($FILES['fileToUpload']['tmp_name'], $uploadfile.'.torrent')) {
-            echo "fonctionne\n";
-        } else {
-            echo "fonctionne pas\n";
+        $libelle = $uploadfile.'.torrent';
+        
+        if (self::_existTorrent($libelle) || file_exists($uploadfile.'.torrent')) {
+            echo "false";
+            return;
         }
 
-        echo 'Voici quelques informations de débogage :';
-        var_dump($FILES);
-        $uploadOk = 1;
+        if (move_uploaded_file(
+            $FILES['fileToUpload']['tmp_name'], $uploadfile.'.torrent'
+        )
+        ) {
+        
+            $req = $this->_db->prepare(
+                'INSERT INTO torrent(
+                    libelle,
+                    taille,
+                    statut,
+                    idSource
+                    ) 
+                    VALUES(
+                    :libelle,
+                    :taille,
+                    :statut,
+                    :idSource
+                    )'
+            );
+
+            $req->execute(
+                array(
+                'libelle' => $libelle,
+                'taille' => $POST['size'],
+                'statut' => 0,
+                'idSource' => $POST['key']
+                )
+            );
+            $uploadOk = 1;
+        } else {
+            echo "Erreur lors du téléchargement du ficier\n";
+            return false;
+        }
     }
 }
 
@@ -605,12 +820,17 @@ switch(true)
 case isset($_GET['update']):
 
     if (UpdateInfoDisk::verifGet($_GET)) {
-
         $infoDisk = new UpdateInfoDisk($_GET);
         echo $infoDisk->disk();
-
     }
 
+    break;
+case isset($_GET['getTorrent']):
+
+    if (UpdateInfoDisk::verifGet($_GET)) {
+        $infoDisk = new UpdateInfoDisk($_GET);
+        echo json_encode($infoDisk->sendTorrent($_GET));
+    }
     break;
 case isset($_GET['info']):
 
@@ -625,10 +845,11 @@ case isset($_GET['check']):
 
 
     break; 
-case isset($_FILES["fileToUpload"]["tmp_name"]) && is_file($_FILES["fileToUpload"]["tmp_name"]):
+case isset($_FILES["fileToUpload"]["tmp_name"]) 
+    && is_file($_FILES["fileToUpload"]["tmp_name"]):
 
         $infoDisk = new UpdateInfoDisk($_GET);
-        echo $infoDisk->addTorrent($_FILES);
+        echo $infoDisk->addTorrent($_FILES, $_POST);
 
     
 

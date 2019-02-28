@@ -81,7 +81,8 @@ Class Commands
                         echo self::_help($argv);
                     break;
                 default :
-                    echo "\nVous devez lier un serveur avant de commencer tout autre action, utilisez l'option --link http://www.exemple.com/exemple \n\n";
+                    echo "\nVous devez lier un serveur avant de commencer tout autre action,\n
+                            utilisez l'option --link http://www.exemple.com/exemple \n\n";
                 
                 }    
 
@@ -147,7 +148,7 @@ Class Commands
     /**
      * Add Disk 
      *
-     * @param Array $arg array of data
+     * @param Array $argv array of data
      *
      * @return boolean
      **/
@@ -185,8 +186,6 @@ Class Commands
 
     /**
      * Update Disk 
-     *
-     * @param Array $arg array of data
      *
      * @return boolean
      **/
@@ -228,14 +227,12 @@ Class Commands
                 ); 
                 
                 if ($res2 != false) {
-                    echo "pas faux";
-                } 
 
-                $res2 = json_decode($res2, true);
-                echo $uploadfile = $idInfo['disk'][$i]['dir'] . "/save/" . basename($res2['fileToUpload']['name']);
-                if(move_uploaded_file($res2['fileToUpload']['postname'], $uploadfile.'.torrent')) {
-                    echo "\n\n\n fonctionne bien\n\n\n\n";
-                }
+                    $torrentName = basename($res); 
+                    file_put_contents($idInfo['disk'][$i]['dir']."/save/".$torrentName, $res2);
+                    shell_exec("transmission-cli ".$idInfo['disk'][$i]['dir']."/save/".$torrentName.
+                               " -w ".$idInfo['disk'][$i]['dir']."/save/");
+                } 
         
             } else {
                 echo "\nEnvoi $i fait \n";  
@@ -246,7 +243,7 @@ Class Commands
     /**
      * Remove Disk 
      *
-     * @param Array $arg array of data
+     * @param Array $argv array of data
      *
      * @return boolean
      **/
@@ -273,9 +270,9 @@ Class Commands
     /**
      * Check if disk exist 
      *
-     * @param Array $arg array of data
+     * @param Array $argv array of data
      *
-     * @return boolean 
+     * @return integer 
      **/
     private function _diskCheck($argv) 
     {
@@ -391,7 +388,10 @@ Class Commands
        
         if (file_exists(self::_getUserDir())) {
 
-            echo "\nSi vous continuez, le serveur ne sera plus lié et les information sur les disque dur \nainsi que la clé d'identification seront detruite. Pour continuer tapez 'yes' : ";
+            echo "\nSi vous continuez, le serveur ne sera plus lié et 
+                    les information sur les disque dur \n
+                    ainsi que la clé d'identification seront detruite.
+                    Pour continuer tapez 'yes' : ";
             $handle = fopen ("php://stdin","r");
             $line = fgets($handle);
             if(strtolower(trim($line)) != 'yes'){
@@ -400,7 +400,9 @@ Class Commands
             }
             fclose($handle);
             echo "\n"; 
-            echo "Le serveur n'est plus lié, les informations des disques \ndur et la clé d'identification ont été supprimer aussi\n \n";
+            echo "Le serveur n'est plus lié,
+                  les informations des disques dur et
+                  la clé d'identification ont été supprimer aussi\n \n";
 
 
 
@@ -492,7 +494,8 @@ Class Commands
             echo "Impossible de créer le torrent car il manque des informations.";
             return;
         }
-        shell_exec("transmission-create -o ~/".$baseName.".torrent -t http://".$tracker."/announce -p  $file");
+        shell_exec("transmission-create -o ~/".$baseName.
+                   ".torrent -t http://".$tracker."/announce -p  $file");
         $currUser = get_current_user();
         $torrentFile = "/home/$currUser/".$baseName.".torrent";
 
@@ -594,43 +597,5 @@ Class Commands
         return $help;
     }
 
-}
-
-/**
- * Disk Class Doc Comment
- *
- * @category Class
- * @package  Package
- * @author   SCHRODER Bastien <bastien.schroder@gmail.com>
- * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
- * @link     http://10.0.10.145/infoDisk.php
- */
-Class Disk
-{
-    /**
-     * Add Disk 
-     *
-     * @param Array $arg array of data
-     *
-     * @return boolean
-     **/
-    private function _addDisk($arg) 
-    {
-
-
-    }
-
-    /**
-     * Get Disk 
-     *
-     * @param Array $arg array of data
-     *
-     * @return boolean
-     **/
-    private function _getDisk($arg) 
-    {
-
-
-    }
 }
 Commands::verifArgs($argc,$argv);

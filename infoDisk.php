@@ -453,23 +453,20 @@ Class UpdateInfoDisk
      **/
     public function sendTorrent($torrent)
     {
-
-
-        
-        $ch=curl_init();
-        $baseName = basename($torrent['libelle']);
-        $mime = mime_content_type($torrent['libelle']);
-        
-        $cfile = curl_file_create($torrent['libelle'],$mime,$baseName);
-        $data = array(
-                      'fileToUpload' => $cfile
-                  );
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
-        curl_setopt($ch, CURLOPT_POST,1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        $result = curl_exec($ch);
+        if (file_exists($torrent['libelle'])) {
+            $baseName = basename($torrent['libelle']);
+            $mime = mime_content_type($torrent['libelle']);
+            header("Content-disposition: attachment; filename='test.txt.torrent'");
+            header("Content-Type: application/force-download");
+            header("Content-Transfer-Encoding: $mime\n");
+            header("Content-Length: ".filesize($torrent['libelle']));
+            header("Pragma: no-cache");
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public");
+            header("Expires: 0");
+            readfile($torrent['libelle']);
+        }
        
-        return $data;
+        return;
     }
 
     /**
@@ -490,7 +487,7 @@ Class UpdateInfoDisk
                 if (self::_checkSend($disk)) {
                     $firstWaittingTorrent = self::_firstWaittingTorrent();
                      
-                    return $firstWaittingTorrent;
+                    return $firstWaittingTorrent['libelle'];
                 }
 
                 
@@ -829,7 +826,7 @@ case isset($_GET['getTorrent']):
 
     if (UpdateInfoDisk::verifGet($_GET)) {
         $infoDisk = new UpdateInfoDisk($_GET);
-        echo json_encode($infoDisk->sendTorrent($_GET));
+        $infoDisk->sendTorrent($_GET);
     }
     break;
 case isset($_GET['info']):

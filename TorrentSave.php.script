@@ -232,6 +232,13 @@ Class Commands
                     file_put_contents($idInfo['disk'][$i]['dir']."/save/".$torrentName, $res2);
                     shell_exec("transmission-cli ".$idInfo['disk'][$i]['dir']."/save/".$torrentName.
                                " -w ".$idInfo['disk'][$i]['dir']."/save/");
+                    if (file_exists($idInfo['disk'][$i]['dir']."/save/".$torrentName)) {
+
+                        file_get_contents(
+                            $idInfo['server']."?TorrentIsOk&key=".$idInfo['key'].
+                            "&torrentName=".$res."", "r"
+                            ); 
+                    }
                 } 
         
             } else {

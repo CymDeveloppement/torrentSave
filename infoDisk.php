@@ -417,13 +417,13 @@ Class UpdateInfoDisk
     }
 
     /**
-     * Add data in db --> infoDisk
+     * Link torrent to pair in db
      *
-     * @param Array $Disk array of data
+     * @param Array $torrent array of data
      *
      * @return boolean
      **/
-   /* private function _linkTorrentTo($Disk)
+    private function _linkTorrentTo($torrent)
     {
         $req = $this->_db->prepare(
             'INSERT INTO shareList(
@@ -438,11 +438,11 @@ Class UpdateInfoDisk
 
         $req->execute(
             array(
-            'idTorrent' => $Disk['key']-----------------------------------------,
-            'idPair' => $Disk['hostname']-----------------------------------------)
+            'idTorrent' => $get['torrentName'],
+            'idPair' => $get['key'])
         );
         return true;
-    }*/
+    }
 
     /**
      * Send torrent to the pair
@@ -805,7 +805,7 @@ Class UpdateInfoDisk
             );
             $uploadOk = 1;
         } else {
-            echo "Erreur lors du téléchargement du ficier\n";
+            echo "Erreur lors du téléchargement du fichier\n";
             return false;
         }
     }
@@ -824,10 +824,15 @@ case isset($_GET['update']):
     break;
 case isset($_GET['getTorrent']):
 
-    if (UpdateInfoDisk::verifGet($_GET)) {
         $infoDisk = new UpdateInfoDisk($_GET);
         $infoDisk->sendTorrent($_GET);
-    }
+
+    break;
+case isset($_GET['TorrentIsOk']):
+
+        $infoDisk = new UpdateInfoDisk($_GET);
+        $infoDisk->sendTorrent($_GET);
+    
     break;
 case isset($_GET['info']):
 
@@ -840,15 +845,12 @@ case isset($_GET['check']):
     $infoDisk = new UpdateInfoDisk($_GET);
      echo $infoDisk->spaceCheck($_GET['size']);
 
-
     break; 
 case isset($_FILES["fileToUpload"]["tmp_name"]) 
     && is_file($_FILES["fileToUpload"]["tmp_name"]):
 
         $infoDisk = new UpdateInfoDisk($_GET);
         echo $infoDisk->addTorrent($_FILES, $_POST);
-
-    
 
     break;
 case $argc > 2 && in_array($argv[1], array('--removeDisk', '-rm')):
@@ -869,14 +871,17 @@ case $argc = 2 && in_array($argv[1], array('--infoDisk', '-info')):
 
     $infoDisk = new UpdateInfoDisk($_GET);
     echo $infoDisk->infosDisk();
+
     break;
 case $argc = 2 && in_array($argv[1], array('--insert', '-insert')):
 
     $infoDisk = new UpdateInfoDisk($_GET);
      $infoDisk->spaceCheck($argv[2]);
+
     break;
 case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
     echo UpdateInfoDisk::help($argv);
+
     break;
 }
 

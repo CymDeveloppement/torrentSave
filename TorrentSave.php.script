@@ -190,7 +190,7 @@ Class Commands
      * @return boolean
      **/
  
-      private function _updateDisk() 
+    private function _updateDisk() 
     {
         
         $idInfo = self::_getIdInfo();
@@ -198,7 +198,7 @@ Class Commands
 
         for ($i = 0; $i < $count; $i++) {
             $ss=$idInfo['disk'][$i]['dir'];
-            echo $ss;
+            echo "\nLe répertoire $ss ";
             if(!file_exists($ss."/save")) {
                 shell_exec("sudo mkdir ".$ss."/save");
             }
@@ -215,12 +215,10 @@ Class Commands
             "&usedSpace=".$usedSpace[0].
             "&hostname=".$hostname.
             "&freeSpace=".$diskFreeSpace."", "r"
-
             );  
-           
-            //var_dump($res);
-            if (isset($res)) {
-                
+            
+            if ($res != false) {
+
                 $res2 = file_get_contents(
                 $idInfo['server']."?getTorrent&key=".$idInfo['key'].
                 "&libelle=".$res."", "r"
@@ -230,11 +228,13 @@ Class Commands
 
                     $torrentName = basename($res); 
                     file_put_contents($idInfo['disk'][$i]['dir']."/save/".$torrentName, $res2);
-                    shell_exec("transmission-cli ".$idInfo['disk'][$i]['dir']."/save/".$torrentName.
+
+                    shell_exec("transmission-remote -n 'transmission:transmission' -a ".$idInfo['disk'][$i]['dir']."/save/".$torrentName.
                                " -w ".$idInfo['disk'][$i]['dir']."/save/");
+    
                     if (file_exists($idInfo['disk'][$i]['dir']."/save/".$torrentName)) {
 
-                        file_get_contents(
+                        echo file_get_contents(
                             $idInfo['server']."?TorrentIsOk&key=".$idInfo['key'].
                             "&torrentName=".$res."", "r"
                             ); 
@@ -242,7 +242,7 @@ Class Commands
                 } 
         
             } else {
-                echo "\nEnvoi $i fait \n";  
+                echo "à envoyé ses données au serveur avec succès. \n";  
             }       
         }  
     }
@@ -466,6 +466,32 @@ Class Commands
         }
     }
 
+    /**
+     * All torrents info
+     *
+     * @return Array
+     **/
+    private function _infoTorrents()
+    {
+        $req = shell_exec("transmission-remote -n 'test:test' -t all -i");
+        //echo $test;
+        $torrentArray = explode("\nNAME", $req);
+        $allTorrents = array();
+        foreach ($torrentArray as $key => $value) {
+            $lignes = explode("\n", $value);
+            $allTorrents[$key] = array();
+            foreach ($lignes as $key2 => $value2) {
+                if (strpos($value2, ': ') !== false) {
+                    $param = explode(': ', $value2);
+                    $allTorrents[$key][trim($param[0])]= trim($param[1]);
+
+                }
+            }
+            
+        }
+        return $allTorrents;
+    }
+
      /**
      * Save Torrent
      *
@@ -501,8 +527,8 @@ Class Commands
             echo "Impossible de créer le torrent car il manque des informations.";
             return;
         }
-        shell_exec("transmission-create -o ~/".$baseName.
-                   ".torrent -t http://".$tracker."/announce -p  $file");
+        echo shell_exec("transmission-create -o ~/".$baseName.
+                   ".torrent -t http://".$tracker."/announce.php $file");
         $currUser = get_current_user();
         $torrentFile = "/home/$currUser/".$baseName.".torrent";
 
@@ -511,28 +537,6 @@ Class Commands
             return;
         }
 
-        $key = $idInfo['key'];
-        $ch=curl_init();
-        $mime = mime_content_type($baseName);
-        $cfile = curl_file_create('/home/'.$currUser.'/'.$baseName.'.torrent',$mime,$baseName);
-        $data = array(
-                      'key' => $key,
-                      'size' => filesize($file), 
-                      'fileToUpload' => $cfile
-                    
-                  );
-        curl_setopt($ch, CURLOPT_URL, $idInfo['server']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
-        curl_setopt($ch, CURLOPT_POST,1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $result = curl_exec($ch);
-
-        if ($result === "false") {
-            echo "Le fichier existe déjà\n";
-            return;
-        }
-        echo $result;
         $count = count($idInfo['disk']);
         $freeSp = 0;
         for ($i = 0; $i < $count; $i++) {
@@ -548,8 +552,45 @@ Class Commands
         }
 
         if (rename($file, $diskSave."/save/".$baseName)) {
-            echo "Ajout du fichier réussi\n";    
+            echo "Ajout du fichier réussi\n";     
         }
+
+        shell_exec("transmission-remote -n 'test:test' -a /home/$currUser/$baseName.torrent --find $diskSave/save");
+        $torrentsInfo = self::_infoTorrents();
+        foreach ($torrentsInfo as $key => $value) {
+            foreach ($value as $key2 => $value2) {
+                if ($value2 === $baseName ) {
+                    $hash = $torrentsInfo[$key]["Hash"];
+
+                }
+            }
+        }
+        $key = $idInfo['key'];
+        $ch=curl_init();
+        $mime = mime_content_type("$diskSave/save/$baseName");
+        $cfile = curl_file_create('/home/'.$currUser.'/'.$baseName.'.torrent',$mime,$baseName);
+        $data = array(
+                      'key' => $key,
+                      'size' => filesize("$diskSave/save/$baseName"),
+                      'hash' => $hash, 
+                      'fileToUpload' => $cfile
+                    
+                  );
+        curl_setopt($ch, CURLOPT_URL, $idInfo['server']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: multipart/form-data'));
+        curl_setopt($ch, CURLOPT_POST,1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($ch);
+
+        if ($result === "false") {
+            echo "Le fichier existe déjà\n";
+            return;
+        }
+        echo $result;
+
+  
+
     }
 
     /**

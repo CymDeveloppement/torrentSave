@@ -15,14 +15,6 @@
  */
 require "errorLog.php";
 
-if (!isset($_POST['key'])) {
-    if (!isset($_GET['key']) || strlen($_GET['key'])!=64 ) {
-        echo "non";
-       
-        exit;
-    }
-}
-
 $db_dir = '/data/DB/database.sqlite';
 
 /**
@@ -363,7 +355,9 @@ Class UpdateInfoDisk
     private function _checkSend($disk)
     {
 
-        /** Vérification de l'appartenance au Top 3 **/
+        /**
+         * Vérification de l'appartenance au Top 3 
+         **/
         $top = self::_topFreeSpace();
         
         if ($top===false) {
@@ -382,7 +376,9 @@ Class UpdateInfoDisk
         if ($isTop === false) {
             return false;
         }
-        /** Récupération d'un torrent en attente puis vérification de la share List **/
+        /** 
+         * Récupération d'un torrent en attente et vérification de la share List 
+         **/
         $firstWaittingTorrent = self::_firstWaittingTorrent();
 
         if ($firstWaittingTorrent===false) {
@@ -391,13 +387,12 @@ Class UpdateInfoDisk
 
 
         $reqShareList = $this->_db->prepare(
-            'SELECT * FROM shareList 
+            'SELECT idShare FROM shareList 
              INNER JOIN torrent 
              ON shareList.idTorrent = torrent.idTorrent 
              WHERE  idPair = :idPair 
              AND statut = 0 
-             AND shareList.idTorrent = :idTorrent
-             AND :idPair != idSource'
+             AND torrent.idTorrent = :idTorrent'
         );
 
         $reqShareList->execute(
@@ -408,23 +403,90 @@ Class UpdateInfoDisk
         );
 
         $data = $reqShareList->fetchAll();
-         
-        if (count($data)>0) {
+        
+        if ($data!=false) {
             return false;
         } 
        
         return true;
     }
-
     /**
-     * Link torrent to pair in db
+     * Check the torrent status
      *
-     * @param Array $torrent array of data
+     * @param Array $get array of data
      *
      * @return boolean
      **/
-    private function _linkTorrentTo($torrent)
+    private function _torrentStatus($get)
     {
+        $reqIdTorrent = $this->_db->prepare(
+            'SELECT idTorrent
+             FROM torrent 
+             WHERE  libelle = :libelle'
+        );
+
+        $reqIdTorrent->execute(
+            array(
+                'libelle' => $get['torrentName']
+            )
+        );
+
+        $idTorrent = $reqIdTorrent->fetch(PDO::FETCH_ASSOC);
+        $reqTorrentStatus = $this->_db->prepare(
+            'SELECT COUNT(idShare) AS countId 
+             FROM shareList 
+             WHERE idTorrent = :id'
+        );
+
+        $reqTorrentStatus->execute(
+            array(
+                'id' => $idTorrent['idTorrent']
+            )
+        );
+
+        $torrentStatus = $reqTorrentStatus->fetch(PDO::FETCH_ASSOC);
+        $sourceNumber = self::$_iniConfig['SourceNumber'];
+        if ($torrentStatus["countId"] === $sourceNumber) {
+
+            $req = $this->_db->prepare(
+            'UPDATE torrent
+             SET statut = :statut
+             WHERE idTorrent = :idTorrent'
+            );
+
+            $req->execute(
+                array(
+                    'statut' => '1',
+                    'idTorrent' => $idTorrent['idTorrent']
+                )
+            );
+        }
+        
+        return true;
+    }
+    /**
+     * Link torrent to pair in db
+     *
+     * @param Array $get array of data
+     *
+     * @return boolean
+     **/
+    private function _linkTorrentTo($get)
+    {
+        $reqIdTorrent = $this->_db->prepare(
+            'SELECT idTorrent AS id
+             FROM torrent 
+             WHERE  libelle = :libelle'
+        );
+
+        $reqIdTorrent->execute(
+            array(
+                'libelle' => $get['torrentName']
+            )
+        );
+
+        $idTorrent = $reqIdTorrent->fetch(PDO::FETCH_ASSOC);
+
         $req = $this->_db->prepare(
             'INSERT INTO shareList(
                 idTorrent,
@@ -438,16 +500,34 @@ Class UpdateInfoDisk
 
         $req->execute(
             array(
-            'idTorrent' => $get['torrentName'],
-            'idPair' => $get['key'])
+            'idTorrent' => $idTorrent["id"],
+            'idPair' => $get['key']
+            )
         );
-        return true;
+        
+       
     }
 
     /**
+     * Check if the torrent exist and if the key is valid
+     *
+     * @return string
+     **/
+    public function linkTorrent()
+    {
+        $get= $this->_getInfo;
+       
+        if (self::_existKey($get) && self::_existTorrent($get['torrentName'])) {
+            self::_linkTorrentTo($get);
+            self::_torrentStatus($get);
+        }
+        echo "possède maintenant un nouveau fichier sauvegardé.\n";
+        
+    }
+    /**
      * Send torrent to the pair
      *
-     * @param Array $Disk array of data
+     * @param Array $torrent array of data
      *
      * @return boolean
      **/
@@ -456,7 +536,7 @@ Class UpdateInfoDisk
         if (file_exists($torrent['libelle'])) {
             $baseName = basename($torrent['libelle']);
             $mime = mime_content_type($torrent['libelle']);
-            header("Content-disposition: attachment; filename='test.txt.torrent'");
+            header("Content-disposition: attachment; filename=$baseName");
             header("Content-Type: application/force-download");
             header("Content-Transfer-Encoding: $mime\n");
             header("Content-Length: ".filesize($torrent['libelle']));
@@ -491,11 +571,12 @@ Class UpdateInfoDisk
                 }
 
                 
-                return "disque ajouté";
+                return false;
 
             } else {
                 self::_updateDisk($disk);
                 if (self::_checkSend($disk)) {
+
                     $firstWaittingTorrent = self::_firstWaittingTorrent();
 
                     return $firstWaittingTorrent['libelle'];
@@ -504,11 +585,11 @@ Class UpdateInfoDisk
 
 
 
-                return "disque mis à jour";
+                return false;
             }
         }
 
-        return "insertion/mise à jour";
+        return false;
     }
 
     /**
@@ -785,12 +866,14 @@ Class UpdateInfoDisk
                     libelle,
                     taille,
                     statut,
+                    hash,
                     idSource
                     ) 
                     VALUES(
                     :libelle,
                     :taille,
                     :statut,
+                    :hash,
                     :idSource
                     )'
             );
@@ -800,6 +883,7 @@ Class UpdateInfoDisk
                 'libelle' => $libelle,
                 'taille' => $POST['size'],
                 'statut' => 0,
+                'hash' => $POST['hash'],
                 'idSource' => $POST['key']
                 )
             );
@@ -811,6 +895,49 @@ Class UpdateInfoDisk
     }
 }
 
+$command = php_sapi_name();
+
+if (substr($command, 0, 3) ==='cli'){
+    switch(true)
+    {
+        case $argc > 2 && in_array($argv[1], array('--removeDisk', '-rm')):
+                            
+        $removeDisk = new UpdateInfoDisk($_GET);
+        echo $removeDisk->removeDisk($argv);
+        echo "remove";
+        exit;
+
+        break;
+    case $argc = 2 && in_array($argv[1], array('--install', '-i')):
+
+        $dirInfo = __FILE__;
+        shell_exec("ln -s $dirInfo /usr/local/bin/torrentSaveServer");
+        echo "\n Installation terminé, torrentSaveServer --help pour affiché l'aide";
+        exit;
+
+        break;
+    case $argc = 2 && in_array($argv[1], array('--infoDisk', '-info')):
+
+        $infoDisk = new UpdateInfoDisk($_GET);
+        echo $infoDisk->infosDisk();
+        exit;
+
+        break;
+    case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
+        echo UpdateInfoDisk::help($argv);
+        exit;
+
+        break;
+    }
+}
+
+if (!isset($_POST['key'])) {
+    if (!isset($_GET['key']) || strlen($_GET['key'])!=64 ) {
+        echo "non";
+       
+        exit;
+    }
+}
 
 switch(true)
 {
@@ -831,7 +958,7 @@ case isset($_GET['getTorrent']):
 case isset($_GET['TorrentIsOk']):
 
         $infoDisk = new UpdateInfoDisk($_GET);
-        $infoDisk->sendTorrent($_GET);
+        echo $infoDisk->linkTorrent();
     
     break;
 case isset($_GET['info']):
@@ -851,36 +978,6 @@ case isset($_FILES["fileToUpload"]["tmp_name"])
 
         $infoDisk = new UpdateInfoDisk($_GET);
         echo $infoDisk->addTorrent($_FILES, $_POST);
-
-    break;
-case $argc > 2 && in_array($argv[1], array('--removeDisk', '-rm')):
-                        
-    $removeDisk = new UpdateInfoDisk($_GET);
-    echo $removeDisk->removeDisk($argv);
-    echo "remove";
-
-    break;
-case $argc = 2 && in_array($argv[1], array('--install', '-i')):
-
-    $dirInfo = __FILE__;
-    shell_exec("ln -s $dirInfo /usr/local/bin/torrentSaveServer");
-    echo "\n Installation terminé, torrentSaveServer --help pour affiché l'aide";
-
-    break;
-case $argc = 2 && in_array($argv[1], array('--infoDisk', '-info')):
-
-    $infoDisk = new UpdateInfoDisk($_GET);
-    echo $infoDisk->infosDisk();
-
-    break;
-case $argc = 2 && in_array($argv[1], array('--insert', '-insert')):
-
-    $infoDisk = new UpdateInfoDisk($_GET);
-     $infoDisk->spaceCheck($argv[2]);
-
-    break;
-case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
-    echo UpdateInfoDisk::help($argv);
 
     break;
 }

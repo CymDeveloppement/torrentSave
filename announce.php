@@ -20,7 +20,7 @@
 /*************************
  ** Configuration start **
  *************************/
-
+require "errorLog.php";
 /*
  * Enable debugging?
  * This allows anyone to see the entire peer database by appending ?debug to the announce URL.
@@ -109,30 +109,33 @@ foreach ($_GET as $key => $value) {
     $res = "$date ---- $key = $value \n";
     file_put_contents ('listGet.txt' , $res,FILE_APPEND);
 }
+function dbConnect(){
 
-try{
-    $db = new PDO('sqlite:/data/DB/database.sqlite');
-    $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(Exception $e) {
-    echo "Impossible d'accéder à la base de données: ".$e->getMessage();
-    die();
+    try{
+        $datab = new PDO('sqlite:/data/DB/database.sqlite');
+        $datab->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        $datab->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch(Exception $e) {
+        echo "Impossible d'accéder à la base de données: ".$e->getMessage();
+        die();
+    }
+    return $datab;
 }
-
-$req = $this->_db->prepare(
+$datab = dbConnect();
+$req = $datab->prepare(
             "UPDATE shareList 
-             INNER JOIN torrent
-             ON shareList.idTorrent = torrent.idTorrent
              SET left = :left
-             WHERE torrent.hash = :hash"
+             WHERE idTorrent = (SELECT idTorrent FROM torrent WHERE hash = :hash) AND idPair != (SELECT idSource FROM torrent WHERE hash = :hash)"
         );
 
+$hash = bin2hex($_GET['info_hash']);
+$left = 100-(($_GET['left']/($_GET['left'] + $_GET['downloaded'] + $_GET['uploaded']))*100);
 $req->execute(
     array(
-    'left' => $_GET['left'],
-    'hash' => bin2hex($_GET['info_hash']))
+    'left' => $left,
+    'hash' => $hash
+    )
 );
-
 
 
 

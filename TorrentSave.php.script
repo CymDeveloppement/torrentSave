@@ -61,7 +61,7 @@ Class Commands
                         echo self::_updateDisk();
                     break; 
                  case $argc = 2 && in_array($argv[1], array('--infoDisk', '-i')):
-                        echo file_get_contents($config['server']."?info");
+                        echo file_get_contents($config['server']."?info&key=".$config['key']."");
                     break;  
                 case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
                         echo self::_help($argv);
@@ -608,6 +608,7 @@ Class Commands
                 
                 --addDisk, -add    ----> used to add a disk.
                 --removeDisk, -rm  ----> used to remove disk.
+                --save, -save      ----> used to create a new save/torrent
                 --send, -s         ----> used to send key and disk data to server
                 --infoDisk, -i     ----> used to get disk info from server
                 --link, -l         ----> used to link server address
@@ -632,6 +633,8 @@ Class Commands
                 $argv[0] --addDisk /disk1
 
                 $argv[0] --removeDisk /disk1
+
+                $argv[0] --save /folder1/folder2/.../file.exemple
 
                 $argv[0] --send 
 

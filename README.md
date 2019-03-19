@@ -63,17 +63,17 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     private function _firstWaittingTorrent($disk)
     {
-        **Récupération des information sur un des torrents en attentes de pairs n'étant pas déjà sauvegardé par la source             concernée.**
+        **Récupération des informations sur un des torrents en attente de pairs et n'étant pas déjà sauvegardé par la source           concernée.**
     }
     
     private function _checkSend($disk)
     {
-        **Vérification de de la disponibilité du torrent à envoyer, de l'espace disponible de la source ainsi que                     l'existance du torrent sur la source**
+        **Vérification de la disponibilité du torrent à envoyer, de l'espace disponible de la source ainsi que                     l'existance du torrent sur la source**
     }
     
     private function _torrentStatus($get)
     {
-        **Valide le torrent quand le nombre de source de celui-ci est égal au nombre de source indiqué dans config.ini**
+        **Valide le torrent quand le nombre de sources de celui-ci est égal au nombre de sources indiqué dans config.ini**
     }
     
     private function _linkTorrentTo($get)
@@ -103,7 +103,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
     public function uninstall($value)
     {
-        **Détruit toutes les donnée d'une source suite à sa demande**
+        **Détruit toutes les données d'une source suite à sa demande**
     
     }
 
@@ -166,9 +166,9 @@ Permet aussi d'ajouter des torrents à la base de données et de les lier à un 
                  Permet aussi de créer une clé d'identification unique au a la source.
                  La clé et les disque ton enregistré au format JSON dans un fichier TXT.
                  Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
-                 Pour cela nous avons deux commande :
+                 Pour cela nous avons:
                   
-    --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification/ recevoir un torrent à télécharger.
+    --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification puis si les             conditions sont présentes, recevoir un torrent à télécharger.
                         
     --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
     
@@ -184,11 +184,11 @@ Permet aussi d'ajouter des torrents à la base de données et de les lier à un 
 
          - php
          
-**Client : Installation automatique**
+**Client : Installation automatique - torrentSave**
    
         curl -sSL http://10.0.10.145/install.php | bash
         
-**Serveur : Installation automatique des commandes**
+**Serveur : Installation automatique des commandes - torrentSaveServer **
     
         php <lien vers infoDisk.php> --install
         

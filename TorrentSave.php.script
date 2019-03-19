@@ -645,11 +645,6 @@ Class Commands
                     shell_exec("sudo transmission-remote -n 'transmission:transmission' -t ".$hash[$i]." -rad");
 
                 }
-                /*if (!$uninstall) {
-                    echo " Une erreur est survenue\n";
-                    var_dump($uninstall);
-                    return;
-                } */
 
                 $currUser = get_current_user();
                 shell_exec("sudo rm -r /home/$currUser/.config/torrentSave");
@@ -662,23 +657,30 @@ Class Commands
 
             case '2':
 
-                $uninstall = file_get_contents(
+               $uninstall = file_get_contents(
                                 $idInfo['server']."?uninstall&key=".$idInfo['key']."", "r"
                                 ); 
-                if (!$uninstall) {
-                    echo " Une erreur est survenue\n";
-                    return;
-                } 
                 
-                $count = count($idInfo['disk']);
+                $hash = explode("\n", $uninstall);
+                $count = count($hash);
+
                 for ($i = 0; $i < $count; $i++) {
-                    $dir=$idInfo['disk'][$i]['dir']."/save";
-                    shell_exec("rm $dir");
+
+                    shell_exec("sudo transmission-remote -n 'transmission:transmission' -t ".$hash[$i]." -rad");
+
                 }
-                
+
+                $countd = count($idInfo['disk']);
+
+                for ($i = 0; $i < $countd; $i++) {
+
+                    $dir=$idInfo['disk'][$i]['dir']."/save";
+                    shell_exec("sudo rm -r $dir");
+                }
+
                 $currUser = get_current_user();
-                shell_exec("rm /home/$currUser/.config/torrentSave");
-                shell_exec("rm /usr/local/bin/torrentSave");
+                shell_exec("sudo rm -r /home/$currUser/.config/torrentSave");
+                shell_exec("sudo rm /usr/local/bin/torrentSave");
                 echo "\n Désinstallation terminé";
                 exit;
 

@@ -104,11 +104,7 @@ if(__DEBUGGING_ENABLED === true) {
 //Send response as text
 header('Content-type: Text/Plain');
 header('X-Tracker-Version: Bitstorm ' . __VERSION); //Please give me some credit
-foreach ($_GET as $key => $value) {     
-    $date=date("H:i:s");
-    $res = "$date ---- $key = $value \n";
-    file_put_contents ('listGet.txt' , $res,FILE_APPEND);
-}
+
 function dbConnect(){
 
     try{
@@ -137,13 +133,6 @@ $req->execute(
     )
 );
 
-
-
-
-
-
-$getget= bin2hex($_GET['info_hash'])."\n";
-file_put_contents ('hash.txt' , $getget,FILE_APPEND);
 /**
  * If you *really* dont want to, comment this line out.
  * Bencoding function, returns a bencoded dictionary.

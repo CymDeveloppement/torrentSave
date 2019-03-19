@@ -60,9 +60,12 @@ Class Commands
                 case $argc = 2 && in_array($argv[1], array('--send', '-send')):
                         echo self::_updateDisk();
                     break; 
-                 case $argc = 2 && in_array($argv[1], array('--infoDisk', '-i')):
+                case $argc = 2 && in_array($argv[1], array('--infoDisk', '-i')):
                         echo file_get_contents($config['server']."?info&key=".$config['key']."");
-                    break;  
+                    break; 
+                case $argc = 2 && in_array($argv[1], array('--uninstall')):
+                        echo self::_uninstall();
+                    break; 
                 case $argc <= 2 || in_array($argv[1], array('--help', '-h', '-?')):
                         echo self::_help($argv);
                     break;
@@ -219,11 +222,24 @@ Class Commands
             
             if ($res != false) {
 
+                $count = count($idInfo['disk']);
+                $freeSp = 0;
+                for ($x = 0; $x < $count; $x++) {
+                    $dFS = disk_free_space($idInfo['disk'][$x]['dir']);
+                    if ($freeSp < $dFS ){
+                        $freeSp=$dFS;
+                        $diskSave = $idInfo['disk'][$x]['dir'];
+                    }
+                }
                 $res2 = file_get_contents(
                 $idInfo['server']."?getTorrent&key=".$idInfo['key'].
                 "&libelle=".$res."", "r"
                 ); 
-                
+                //var_dump($res2);
+                if (!file_exists($diskSave."/save")) {
+                    shell_exec("sudo mkdir ".$diskSave."/save");
+                    shell_exec("sudo chmod 777 ".$diskSave."/save");
+                }
                 if ($res2 != false) {
 
                     $torrentName = basename($res); 
@@ -549,6 +565,7 @@ Class Commands
 
         if (!file_exists($diskSave."/save")) {
             shell_exec("sudo mkdir ".$diskSave."/save");
+            shell_exec("sudo chmod 755 ".$diskSave."/save");
         }
 
         if (rename($file, $diskSave."/save/".$baseName)) {
@@ -593,6 +610,82 @@ Class Commands
 
     }
 
+    /**
+     * TorrentSave Uninstall
+     *
+     * @return Array
+     **/
+    private function _uninstall()
+    {
+        $idInfo = self::_getIdInfo();
+        echo "\nPour supprimer Uniquement TorrentSave  : '1',
+                 Pour supprimer TorrentSave ainsi que les sauvegardes associées : '2',
+                 Pour interrompre l'opération : '0'";
+        $handle = fopen ("php://stdin","r");
+        $line = fgets($handle);
+        switch(strtolower(trim($line)))
+        {
+            case '0':
+
+                echo "\nAction annulé !\n\n";
+                exit;
+
+                break;
+
+            case '1':
+                
+                $uninstall = file_get_contents(
+                                $idInfo['server']."?uninstall&key=".$idInfo['key']."", "r"
+                                ); 
+                
+                $hash = explode("\n", $uninstall);
+                $count = count($hash);
+                for ($i = 0; $i < $count; $i++) {
+
+                    shell_exec("sudo transmission-remote -n 'transmission:transmission' -t ".$hash[$i]." -rad");
+
+                }
+                /*if (!$uninstall) {
+                    echo " Une erreur est survenue\n";
+                    var_dump($uninstall);
+                    return;
+                } */
+
+                $currUser = get_current_user();
+                shell_exec("sudo rm -r /home/$currUser/.config/torrentSave");
+                shell_exec("sudo rm /usr/local/bin/torrentSave");
+                
+                echo "\n Désinstallation terminé";
+                exit;
+
+                break;
+
+            case '2':
+
+                $uninstall = file_get_contents(
+                                $idInfo['server']."?uninstall&key=".$idInfo['key']."", "r"
+                                ); 
+                if (!$uninstall) {
+                    echo " Une erreur est survenue\n";
+                    return;
+                } 
+                
+                $count = count($idInfo['disk']);
+                for ($i = 0; $i < $count; $i++) {
+                    $dir=$idInfo['disk'][$i]['dir']."/save";
+                    shell_exec("rm $dir");
+                }
+                
+                $currUser = get_current_user();
+                shell_exec("rm /home/$currUser/.config/torrentSave");
+                shell_exec("rm /usr/local/bin/torrentSave");
+                echo "\n Désinstallation terminé";
+                exit;
+
+                break;
+        }
+        fclose($handle);
+    }
     /**
      * Command help
      *  

@@ -183,7 +183,7 @@ Class UpdateInfoDisk
             'freeSpace' => $Disk['freeSpace'],
             'lastUpdate' => date("Y-m-d H:i:s"))
         );
-        return true;
+       
     }
     /**
      * Remove data in db --> infoDisk
@@ -285,7 +285,7 @@ Class UpdateInfoDisk
                     'pcName' => $key['hostname'])
                 );
                 echo "Clé ajouté mais en cours de validation, Essayez plus tard";
-                return false;
+                return true;/** remettre false verification  **/
             } else {
                 echo "Clé en cours de validation. Essayez de nouveau plus tard";
                 return false;
@@ -326,15 +326,20 @@ Class UpdateInfoDisk
      *
      * @return integer
      **/
-    private function _firstWaittingTorrent()
+    private function _firstWaittingTorrent($disk)
     {
         $reqFirstWaittingTorrent = $this->_db->prepare(
             'SELECT * 
              FROM torrent 
              WHERE statut = 0
+             AND idTorrent not in (SELECT idTorrent FROM shareList WHERE idPair = :pair)
              LIMIT 1'
         );
-        $reqFirstWaittingTorrent->execute();
+        $reqFirstWaittingTorrent->execute(
+            array(
+                'pair' => $disk['key']
+            )
+        );
 
         $data = $reqFirstWaittingTorrent->fetch(PDO::FETCH_ASSOC);
         
@@ -379,7 +384,7 @@ Class UpdateInfoDisk
         /** 
          * Récupération d'un torrent en attente et vérification de la share List 
          **/
-        $firstWaittingTorrent = self::_firstWaittingTorrent();
+        $firstWaittingTorrent = self::_firstWaittingTorrent($disk);
 
         if ($firstWaittingTorrent===false) {
             return false;
@@ -564,11 +569,7 @@ Class UpdateInfoDisk
                 
                 self::_addDisk($disk);
               
-                if (self::_checkSend($disk)) {
-                    $firstWaittingTorrent = self::_firstWaittingTorrent();
-                     
-                    return $firstWaittingTorrent['libelle'];
-                }
+                
 
                 
                 return false;
@@ -577,7 +578,7 @@ Class UpdateInfoDisk
                 self::_updateDisk($disk);
                 if (self::_checkSend($disk)) {
 
-                    $firstWaittingTorrent = self::_firstWaittingTorrent();
+                    $firstWaittingTorrent = self::_firstWaittingTorrent($disk);
 
                     return $firstWaittingTorrent['libelle'];
                 }
@@ -745,7 +746,7 @@ Class UpdateInfoDisk
             exit;
         }
         $limit = self::$_iniConfig['SourceNumber'];
-       
+        
         $req = $this->_db->prepare(
             'SELECT pcKey, pcName, SUM(totalSpace) AS totalSpace, 
                             SUM(saveSpace) AS saveSpace,
@@ -893,6 +894,96 @@ Class UpdateInfoDisk
             return false;
         }
     }
+   /**
+     * Uninstall
+     *
+     * @param Array $value get value 
+     *
+     * @return boolean
+     */
+    public function uninstall($value)
+    {
+        $hash= self::_deleteFromDb($value);
+        foreach ($hash as $key => $ligne) {
+               
+            echo $ligne['hash']."\n";
+        }
+        
+    }
+
+    /**
+     * Delete pair from db
+     *
+     * @param Array $value get value 
+     *
+     * @return boolean
+     */
+    private function _deleteFromDb($value)
+    {
+        $repHash = $this->_db->prepare(
+            'SELECT hash
+            FROM torrent
+            INNER JOIN shareList  
+            ON torrent.idTorrent = shareList.idTorrent
+            WHERE idPair = :key'
+        );
+        $repHash->execute(
+            array(
+                'key' => $value['key']
+            )
+        );
+        $hash = $repHash->fetchAll();
+
+        $reqShare = $this->_db->prepare(
+            'DELETE FROM shareList
+            WHERE idPair = :key'
+        );
+        $reqShare->execute(
+            array(
+                'key' => $value['key']
+            )
+        );
+        $reqDisk = $this->_db->prepare(
+            'DELETE FROM infoDisk
+            WHERE pcKey = :key'
+        );
+        $reqDisk->execute(
+            array(
+                'key' => $value['key']
+            )
+        );
+       
+        $reqID = $this->_db->prepare(
+            'DELETE FROM ID
+            WHERE Key = :key'
+        );
+        $reqID->execute(
+            array(
+                'key' => $value['key']
+            )
+        );
+
+        $reqCheck = $this->_db->prepare(
+            'SELECT *
+            FROM ID  
+            WHERE Key = :key'
+        );
+        $reqCheck->execute(
+            array(
+                'key' => $value['key']
+            )
+        );
+        $data = $reqCheck->fetchAll();
+        
+        if ($data!=false) {
+            return false;
+        } else {
+                
+            return $hash;
+        }
+      
+        
+    }
 }
 
 $command = php_sapi_name();
@@ -947,6 +1038,13 @@ case isset($_GET['update']):
         $infoDisk = new UpdateInfoDisk($_GET);
         echo $infoDisk->disk();
     }
+
+    break;
+case isset($_GET['uninstall']):
+
+        $infoDisk = new UpdateInfoDisk($_GET);
+        echo $infoDisk->uninstall($_GET);
+        
 
     break;
 case isset($_GET['getTorrent']):

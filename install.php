@@ -9,7 +9,7 @@
  * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link     http://10.0.10.145/infoDisk.php
  */
-$linkTmp = "http://".$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI];
+$linkTmp = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 $link= str_replace("install.php", "TorrentSave.php.script", $linkTmp);
 echo " 
 	scriptDir=\"/home/\$USER/.config/torrentSave/TorrentSave.php.script\"
@@ -33,6 +33,14 @@ echo "
 	fi
 	 echo \"PHP est à la bonne version\"
 
+	# Check if  transmission-daemon is installed
+	if [ ! -e /usr/bin/transmission-daemon ]
+	then
+		 echo \"Vous devez installer transmission-daemon.\"
+		 exit 0
+	fi
+	echo \"Transmission-daemon est bien installé \"
+	
 	# Check if the dir torrentSave exist
 	if [ ! -d \$torrentDir ]
 	then
@@ -44,7 +52,7 @@ echo "
 		fi
 	fi
 
-	cd $torrentDir
+	cd \$torrentDir
 	wget -q $link
 	sudo mv TorrentSave.php.script \$torrentCommandDir
 	sudo chmod +x \$torrentCommandDir

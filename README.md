@@ -204,7 +204,7 @@ Permet aussi d'ajouter des torrents à la base de données et de les lier à un 
   
   ## DESCRIPTION DU SYSTEME - Interface Web : 
   
-  L'interface Web permet à l'administrateur de valider les nouveaux pairs, d'afficher les différentes informations lier aux torrents, disques et pairs ainsi que de télécharger les torrents.
+  L'interface Web permet à l'administrateur de valider les nouveaux pairs, d'afficher les différentes informations liées aux torrents, disques et pairs ainsi que de télécharger les torrents.
   
   
  **Cas 1:**
@@ -234,18 +234,18 @@ Permet aussi d'ajouter des torrents à la base de données et de les lier à un 
   Après Installation de torrentSave, vous devrez :
     -Lier un serveur.(torrentSave --link http://serverAdress/infoDisk.php)
     -Ajouter un disque pour la sauvegarde des torrents.(torrentSave -add /diskDirectory)
-    -Envoyer vos données au serveur.(Une validation par l'administrateur sera nécessaire pour vous compter a la liste des       pairs).(torrentSave --send)
+    -Envoyer vos données au serveur.(Une validation par l'administrateur sera nécessaire pour vous compter à la liste des       pairs).(torrentSave --send)
     
    **Serveur:**
    
-   Après installation de torrentSaveServer ainsi que les autres fichier sur votre serveur web, vous devrez : 
-     -Créer la base de données puis les tables grâce aux requêtes présentes dans SQLRequest.sql
-     -Modifier le chemin de votre base de donnée dans infoWeb.php, infoDisk.php ainsi que announce.php.
+   Après installation de torrentSaveServer ainsi que des autres fichiers sur votre serveur web, vous devrez : 
+     -Créer la base de données(de préférence sqlite) puis les tables grâce aux requêtes présentes dans SQLRequest.sql 
+     -Modifier le chemin de votre base de données dans infoWeb.php, login.php, register.php , infoDisk.php ainsi que               announce.php.
    
    **Cas 2:**
      
    Pour l'interface web vous devrez : 
-     -Créer votre identifiant administrateur grace à <URL>/register.php
+     -Créer votre identifiant administrateur grace à <URL>/register.php puis supprimez register.php après création des             identifiants.
      -Vous pourrez vous connecter au panel via <URL>/login.php.
   
   

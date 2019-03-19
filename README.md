@@ -7,7 +7,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     
 -----------------------------------------------------------------------------------------------------------
   
-  ## ARCHITECTURE DU SYSTEME :  
+  ## ARCHITECTURE DU SYSTEME - Ligne de commande :  
  
  Le serveur doit récupérer les informations des différents pairs pour savoir à qui attribuer les torrents en fonction de   
  l'espace restant sur leurs disque dur. 
@@ -28,15 +28,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
  
  1. Une source envoie un torrent au serveur.
  
- 2. Le serveur envoi le torrent aux X pairs ayant le plus d'espace libre pour avoir de nouvelles sources et donc plus de
- sauvegarde.
- 
- **Cas 3:**
- 
- 1. Quelqu'un veut supprimer un torrent.
- 2. Le serveur fait la liste des sources le possèdant.
- 3. Quand les pairs auront envoyer leurs informations au serveur, il leurs renverra un tableau JSON contenant
- les torrents à supprimer.
+ 2. Le serveur envoi le torrent aux X( X étant le nombre de sources voulue indiqué dans config.ini) pairs ayant le plus         d'espace libre pour avoir de nouvelles sources et donc plus de sauvegarde.
  
                               
  ### SERVEUR :
@@ -69,6 +61,31 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         **Vérification de l'existance du disque dans la base de données**
     }
     
+    private function _firstWaittingTorrent($disk)
+    {
+        **Récupération des information sur un des torrents en attentes de pairs n'étant pas déjà sauvegardé par la source             concernée.**
+    }
+    
+    private function _checkSend($disk)
+    {
+        **Vérification de de la disponibilité du torrent à envoyer, de l'espace disponible de la source ainsi que                     l'existance du torrent sur la source**
+    }
+    
+    private function _torrentStatus($get)
+    {
+        **Valide le torrent quand le nombre de source de celui-ci est égal au nombre de source indiqué dans config.ini**
+    }
+    
+    private function _linkTorrentTo($get)
+    {
+        **Lie un torrent à un pair dans la liste de partage**
+    }
+    
+    public function sendTorrent($torrent)
+    {
+        **Envoi du torrent à la source**
+    }
+    
     public function Disk()
     {
         **Permet d'appeller addDisk ou updatDisk en dehors de la classe si certaines conditions sont présentes**
@@ -78,8 +95,20 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
     {
         **Renvoi les données stockées **
     }
+    
+    public function addTorrent($FILES, $POST)
+    {
+        **Ajoute le torrent envoyé par la source à la base de données**
+    }
+    
+    public function uninstall($value)
+    {
+        **Détruit toutes les donnée d'une source suite à sa demande**
+    
+    }
 
  **infoDisk** :   Se trouve sur le serveur et permet d'ajouter, supprimer, mettre à jours un disque dans la base de donnée grâce aux informations envoyées par les différentes sources avec le paramètre ?update placé dans l'URL ou de renvoyer les informations conscernant l'ensemble des disques avec le paramètre ?infoDisk.
+Permet aussi d'ajouter des torrents à la base de données et de les lier à un pair.
  
  
  ### SOURCE/PAIR :
@@ -98,7 +127,7 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
 
     private function _updateDisk() 
     {
-        **Mise à jours d'un disque**
+        **Mise à jours d'un disque avec en retour la possibilité d'avoir un torrent à télécharger**
     }
  
     private function _removeDisk($argv) 
@@ -121,6 +150,17 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
         **Renvoi l'aide conscernant les commandes**
     }
     
+    private function _save($file) 
+    {
+        **Créer un torrent puis envoi de celui-ci au serveur**
+    }
+    
+    private function _uninstall()
+    {
+        **Suppression de torrentSave de la source ainsi que les informations le concernant sur le serveur**
+    }
+    
+    
    **torrentSave** : se trouve sur la source et permet d'ajouter(--addDisk),supprimer(--remodeDisk à complèter),
                  mettre à joursun disque(--updateDisk) ainsi que d'afficher de l'aide pour les commandes à utiliser(--help).
                  Permet aussi de créer une clé d'identification unique au a la source.
@@ -128,9 +168,15 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
                  Ceci était la partie locale du script mais le but de celui ci est de communiquer avec le serveur.
                  Pour cela nous avons deux commande :
                   
-    --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification.
+    --send : Permet d'envoyer les informations des différents disques ainsi que la clé d'identification/ recevoir un torrent à télécharger.
                         
     --infoDisk : Permet de recevoir les informations du serveur conscernant l'ensemble des disques.
+    
+    --save : Permet de créer un torrent et de l'envoyer au serveur.
+    
+    --link/--unlink : Permet de lier ou délier l'adresse du serveur
+    
+    --uninstall : Suppression de torrentSave de la source ainsi que les informations le concernant sur le serveur 
     
    ### Installation 
    
@@ -154,8 +200,29 @@ Deux scripts sont utilisé pour l'authentification des sources ainsi que le stoc
        voulue ainsi que le pourcentage du disque accordé à l'utilisateur.
        
        
+-----------------------------------------------------------------------------------------------------------
+  
+  ## DESCRIPTION DU SYSTEME - Interface Web : 
+  
+  L'interface Web permet à l'administrateur de valider les nouveaux pairs, d'afficher les différentes informations lier aux torrents, disques et pairs ainsi que de télécharger les torrents.
+  
+  
+ **Cas 1:**
+ 
+ 1. L'administrateur se connecte à l'interface.
         
-            
+ 2. Il se rend sur la page de validation des pairs grâce à la barre de navigation située à gauche.
+        
+ 3. Il valide une de nouvelles pairs en attentes.    
+ 
+  **Cas 2:**
+ 
+ 1. L'administrateur se connecte à l'interface.
+        
+ 2. Il se rend sur la page listant les torrents grâce à la barre de navigation située à gauche.
+        
+ 3. Il télécharge les torrents dont il a besoin.     
+
 
             
         
